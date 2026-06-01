@@ -1,0 +1,63 @@
+# LiteLLM gateway config — blueprint §8
+# Deploy as a Render web service; set environment variables for API keys.
+# Verify model strings at: https://docs.litellm.ai/docs/providers
+
+model_list:
+  # Tier-0: classification, extraction, image understanding, simple Q&A
+  - model_name: tier-0
+    litellm_params:
+      model: gemini/gemini-2.0-flash
+      api_key: "os.environ/GOOGLE_API_KEY"
+
+  # Tier-1: structured tasks, record transformation, moderate reasoning
+  - model_name: tier-1
+    litellm_params:
+      model: anthropic/claude-haiku-4-5-20251001
+      api_key: "os.environ/ANTHROPIC_API_KEY"
+
+  # Tier-2: generation, copywriting, agent orchestration (default for most agents)
+  - model_name: tier-2
+    litellm_params:
+      model: anthropic/claude-sonnet-4-6
+      api_key: "os.environ/ANTHROPIC_API_KEY"
+
+  # Tier-3: hard reasoning, complex migration logic — use deliberately
+  - model_name: tier-3
+    litellm_params:
+      model: anthropic/claude-opus-4-8
+      api_key: "os.environ/ANTHROPIC_API_KEY"
+
+  # Embeddings (Tier-0 cost for memory writes)
+  - model_name: embedder
+    litellm_params:
+      model: gemini/text-embedding-004
+      api_key: "os.environ/GOOGLE_API_KEY"
+
+router_settings:
+  # Fallback chain: if tier-0 fails, use tier-1; if tier-2 fails, use tier-3
+  fallbacks:
+    - {"tier-0": ["tier-1"]}
+    - {"tier-2": ["tier-3"]}
+
+  # Semantic caching — huge saving on content engine (same brand profile → cache hit)
+  cache_responses: true
+  cache_kwargs:
+    type: redis
+    host: "os.environ/REDIS_HOST"
+    port: 6379
+
+  # Rate-limit retry with exponential backoff
+  num_retries: 3
+  retry_after: 5
+
+general_settings:
+  # Enforce per-client monthly_budget via LiteLLM API keys
+  max_budget_per_key: true
+  master_key: "os.environ/LITELLM_MASTER_KEY"
+
+  # Langfuse callback — every model call emits a trace
+  success_callback: ["langfuse"]
+  failure_callback: ["langfuse"]
+  langfuse_public_key: "os.environ/LANGFUSE_PUBLIC_KEY"
+  langfuse_secret_key: "os.environ/LANGFUSE_SECRET_KEY"
+  langfuse_host: "os.environ/LANGFUSE_HOST"

@@ -69,25 +69,3 @@ class Evaluator(ABC):
         ...
 
 
-class LLMJudgeEvaluator(Evaluator):
-    """
-    Reference backend. TODO(claude-code): inject a Tier-0/1 judge model via the
-    LiteLLM gateway; implement gate() with hard floors (any dimension below its
-    min_score => fail) plus the weighted average threshold; wire failures back
-    into the golden-set store.
-    """
-
-    def __init__(self, *, judge) -> None:
-        self._judge = judge  # callable(prompt) -> structured scores
-
-    def score_online(self, result: AgentResult, dimensions: list[EvalDimension]) -> EvalResult:
-        raise NotImplementedError("judge the result on each dimension; build fix_directive on fail")
-
-    def evaluate_offline(self, cases, dimensions):
-        raise NotImplementedError("run agent on each golden case, score, aggregate")
-
-    def gate(self, results, *, min_average: float = 7.0) -> bool:
-        raise NotImplementedError("hard floors per dimension + weighted average >= min_average")
-
-    def record_engagement(self, artifact_id: str, engagement: dict[str, float]) -> None:
-        raise NotImplementedError("persist engagement; reweight golden set / few-shots")

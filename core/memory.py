@@ -54,33 +54,3 @@ class MemoryService(ABC):
         ...
 
 
-class PostgresMemoryService(MemoryService):
-    """
-    Reference backend: API Memory Tool semantics on top of Postgres + pgvector.
-
-    Expected schema (see blueprint §7 `memory` table):
-        memory(id, client_id, module, content, embedding VECTOR(1536), metadata JSONB, created_at)
-    plus a tsvector/FTS index for keyword search and an ivfflat index for vectors.
-
-    TODO(claude-code):
-      * inject an embedding client (Tier-0 model via the LiteLLM gateway) and a
-        psycopg/SQLAlchemy connection pool through __init__.
-      * implement hybrid retrieval (FTS + cosine), merged with reciprocal-rank
-        fusion, hard-filtered by client_id.
-    """
-
-    def __init__(self, *, db, embedder) -> None:
-        self._db = db            # connection pool
-        self._embedder = embedder  # callable(text) -> list[float]
-
-    def write(self, record: MemoryRecord) -> str:
-        raise NotImplementedError("INSERT row, embed content, return id")
-
-    def read(self, client_id: ClientId, module: Module, query: str, k: int = 5) -> list[MemoryRecord]:
-        raise NotImplementedError("hybrid FTS + pgvector retrieval, filtered by client_id")
-
-    def search(self, client_id: ClientId, query: str, k: int = 5) -> list[MemoryRecord]:
-        raise NotImplementedError("semantic search across modules for one tenant")
-
-    def forget(self, client_id: ClientId, record_id: str) -> bool:
-        raise NotImplementedError("DELETE ... WHERE id = %s AND client_id = %s")
