@@ -32,6 +32,7 @@ model_list:
     litellm_params:
       model: gemini/text-embedding-004
       api_key: "os.environ/GOOGLE_API_KEY"
+      drop_params: true
 
 router_settings:
   # Fallback chain: if tier-0 fails, use tier-1; if tier-2 fails, use tier-3
