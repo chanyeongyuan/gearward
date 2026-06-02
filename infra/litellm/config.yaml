@@ -55,9 +55,5 @@ general_settings:
   max_budget_per_key: true
   master_key: "os.environ/LITELLM_MASTER_KEY"
 
-  # Langfuse callback — every model call emits a trace
-  success_callback: ["langfuse"]
-  failure_callback: ["langfuse"]
-  langfuse_public_key: "os.environ/LANGFUSE_PUBLIC_KEY"
-  langfuse_secret_key: "os.environ/LANGFUSE_SECRET_KEY"
-  langfuse_host: "os.environ/LANGFUSE_HOST"
+  # Langfuse tracing — enabled via env vars (LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY,
+  # LANGFUSE_HOST). LiteLLM auto-detects these; no config needed here.
