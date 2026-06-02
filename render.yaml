@@ -21,10 +21,10 @@ services:
   # ── LiteLLM gateway ───────────────────────────────────────────────────────
   - type: web
     name: gearward-litellm
-    runtime: docker
-    dockerfilePath: ./infra/litellm/Dockerfile
-    dockerContext: .
-    plan: starter          # $7/mo; always-on
+    runtime: python
+    buildCommand: pip install 'litellm[proxy]'
+    startCommand: litellm --config infra/litellm/config.yaml --port $PORT --host 0.0.0.0
+    plan: starter          # $7/mo; always-on (~250MB RAM via pip, fits in 512MB limit)
     healthCheckPath: /health
     envVars:
       - key: ANTHROPIC_API_KEY
