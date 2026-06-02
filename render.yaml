@@ -24,7 +24,7 @@ services:
     runtime: docker
     dockerfilePath: ./infra/litellm/Dockerfile
     dockerContext: .
-    plan: starter          # $7/mo; always-on (free tier spins down)
+    plan: basic-256mb      # $7/mo; always-on
     healthCheckPath: /health
     envVars:
       - key: ANTHROPIC_API_KEY
@@ -61,7 +61,7 @@ services:
     schedule: "0 2 * * *"   # 02:00 UTC nightly
     buildCommand: pip install -e ".[dev]"
     startCommand: python -m jobs.refinement
-    plan: starter
+    plan: basic-256mb
     envVars:
       - key: DATABASE_URL
         fromDatabase:
