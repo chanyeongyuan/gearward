@@ -16,7 +16,6 @@ services:
     name: gearward-redis
     plan: free             # 25MB — fine for queue + cache at early volume
     maxmemoryPolicy: allkeys-lru
-    ipAllowList: []        # internal Render network only
 
   # ── LiteLLM gateway ───────────────────────────────────────────────────────
   - type: web
@@ -67,7 +66,6 @@ services:
         fromDatabase:
           name: gearward-db
           property: connectionString
-      - key: LITELLM_BASE_URL
-        sync: false          # paste gearward-litellm URL after first deploy
-      - key: LITELLM_MASTER_KEY
-        sync: false
+      # After first deploy, set these two manually in the Render dashboard:
+      #   LITELLM_BASE_URL  = https://gearward-litellm.onrender.com
+      #   LITELLM_MASTER_KEY = (same value as on the litellm service)
