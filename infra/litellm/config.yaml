@@ -44,7 +44,7 @@ router_settings:
   cache_kwargs:
     type: redis
     host: "os.environ/REDIS_HOST"
-    port: 6379
+    port: "os.environ/REDIS_PORT"
 
   # Rate-limit retry with exponential backoff
   num_retries: 3

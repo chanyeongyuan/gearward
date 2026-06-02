@@ -1,0 +1,76 @@
+# Render Blueprint — gearward agency platform
+# Deploy: connect this repo in the Render dashboard → New → Blueprint
+# Docs: https://render.com/docs/blueprint-spec
+
+databases:
+  - name: gearward-db
+    databaseName: gearward
+    user: gearward
+    plan: starter          # starter = $7/mo; pgvector + 1GB storage
+    postgresMajorVersion: 16
+
+services:
+
+  # ── Redis (job queue + LiteLLM semantic cache) ────────────────────────────
+  - type: redis
+    name: gearward-redis
+    plan: free             # 25MB — fine for queue + cache at early volume
+    maxmemoryPolicy: allkeys-lru
+
+  # ── LiteLLM gateway ───────────────────────────────────────────────────────
+  - type: web
+    name: gearward-litellm
+    runtime: docker
+    dockerfilePath: ./infra/litellm/Dockerfile
+    dockerContext: .
+    plan: starter          # $7/mo; always-on (free tier spins down)
+    healthCheckPath: /health
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false        # set manually in Render dashboard
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: LITELLM_MASTER_KEY
+        sync: false
+      - key: LANGFUSE_PUBLIC_KEY
+        sync: false
+      - key: LANGFUSE_SECRET_KEY
+        sync: false
+      - key: LANGFUSE_HOST
+        value: https://cloud.langfuse.com
+      - key: REDIS_HOST
+        fromService:
+          type: redis
+          name: gearward-redis
+          property: host
+      - key: REDIS_PORT
+        fromService:
+          type: redis
+          name: gearward-redis
+          property: port
+      - key: DATABASE_URL
+        fromDatabase:
+          name: gearward-db
+          property: connectionString
+
+  # ── Refinement job — nightly dreaming-lite ────────────────────────────────
+  - type: cron
+    name: gearward-refinement
+    runtime: python
+    schedule: "0 2 * * *"   # 02:00 UTC nightly
+    buildCommand: pip install -e ".[dev]"
+    startCommand: python -m jobs.refinement
+    plan: starter
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: gearward-db
+          property: connectionString
+      - key: LITELLM_BASE_URL
+        fromService:
+          type: web
+          name: gearward-litellm
+          property: host
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: LITELLM_MASTER_KEY
+        sync: false
