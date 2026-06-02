@@ -16,6 +16,7 @@ services:
     name: gearward-redis
     plan: free             # 25MB — fine for queue + cache at early volume
     maxmemoryPolicy: allkeys-lru
+    ipAllowList: []        # internal Render network only
 
   # ── LiteLLM gateway ───────────────────────────────────────────────────────
   - type: web
@@ -27,7 +28,7 @@ services:
     healthCheckPath: /health
     envVars:
       - key: ANTHROPIC_API_KEY
-        sync: false        # set manually in Render dashboard
+        sync: false
       - key: GOOGLE_API_KEY
         sync: false
       - key: LITELLM_MASTER_KEY
@@ -67,10 +68,6 @@ services:
           name: gearward-db
           property: connectionString
       - key: LITELLM_BASE_URL
-        fromService:
-          type: web
-          name: gearward-litellm
-          property: host
-          envVarKey: RENDER_EXTERNAL_URL
+        sync: false          # paste gearward-litellm URL after first deploy
       - key: LITELLM_MASTER_KEY
         sync: false
