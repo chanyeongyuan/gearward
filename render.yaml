@@ -59,7 +59,7 @@ services:
     runtime: python
     schedule: "0 2 * * *"   # 02:00 UTC nightly
     buildCommand: pip install -e ".[dev]"
-    startCommand: python -m jobs.refinement
+    startCommand: python infra/migrate.py && python -m jobs.refinement
     plan: starter
     envVars:
       - key: DATABASE_URL
